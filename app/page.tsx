@@ -188,15 +188,18 @@ export default function Home() {
 				<Select
 					isDisabled={!input || input.length === 0}
 					placeholder="Select an action"
+					onChange={(e: any) => {
+						if (e.target.value !== "")
+							setAction(e.target.value);
+						else
+							setAction(null);
+						setLabelChoices([]);
+					}}
 				>
 					{actions.map((action, index) => {
 						return (
 							<SelectItem
 								key={index}
-								onClick={() => {
-									setAction(index);
-									setLabelChoices([]);
-								}}
 							>
 								{action.name}
 							</SelectItem>
