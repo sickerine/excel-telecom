@@ -222,7 +222,10 @@ export default function Home() {
 									onChange={(e: any) => {
 										setLabelChoices((prev: any) => {
 											const next = [...prev];
-											next[index] = e.target.value;
+											if (e.target.value === "")
+												next[index] = null;
+											else
+												next[index] = e.target.value;
 											return next;
 										});
 									}}
