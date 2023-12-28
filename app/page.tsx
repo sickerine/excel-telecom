@@ -1,20 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { Button, Select, SelectItem } from "@nextui-org/react";
+import { useRef, useState } from "react";
 
-function CSVToArray(strData: string, strDelimiter: string = ",") {
+function CSVToArray(strData: string, strDelimiter: string = ";"): string[][] {
 	const objPattern = new RegExp(
+		// Delimiters.
 		"(\\" +
 			strDelimiter +
 			"|\\r?\\n|\\r|^)" +
+			// Quoted fields.
 			'(?:"([^"]*(?:""[^"]*)*)"|' +
+			// Standard fields.
 			'([^"\\' +
 			strDelimiter +
 			"\\r\\n]*))",
 		"gi"
 	);
 
-	const arrData: any[] = [[]];
+	const arrData: string[][] = [[]];
 	let arrMatches = null;
 
 	while ((arrMatches = objPattern.exec(strData))) {
@@ -38,10 +42,10 @@ function CSVToArray(strData: string, strDelimiter: string = ",") {
 		arrData[arrData.length - 1].push(strMatchedValue);
 	}
 
-	return arrData;
+	return arrData.filter((row) => row.join("").length > 0);
 }
 
-function arrayToCSV(arrData: any[][], strDelimiter: string = ",") {
+function arrayToCSV(arrData: any[][], strDelimiter: string = ";") {
 	let strData = "";
 
 	for (let i = 0; i < arrData.length; i++) {
@@ -78,37 +82,67 @@ function readFiles(inputFiles: FileList): Promise<string[]> {
 	return Promise.all(filePromises);
 }
 
+type Action = {
+	name: string;
+	labels: string[];
+	func: () => void;
+};
+
 export default function Home() {
+	const [files, setFiles] = useState<any>(null);
 	const [input, setInput] = useState<any>(null);
 	const [output, setOutput] = useState<any>(null);
-	const [action, setAction] = useState<any>(0);
+	const [action, setAction] = useState<any>(null);
+	const [error, setError] = useState<any>();
+	const [labelChoices, setLabelChoices] = useState<any>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
 
-  const actions = [
-    () => {
-      const finalArray: any = [];
-      input?.forEach((file: any) => {
-        file.forEach((row: any) => {
-          finalArray.push(row);
-        });
-      });
-      console.log({finalArray});
-      setOutput([finalArray]);
-    },
-  ]
+	const actions: Action[] = [
+		{
+			name: "Filter MSANs",
+			labels: ["Database", "MSANs"],
+			func: () => {
+				const final = [["ND", "MSAN", "Port", "Port", "Port"]];
+				const database = input[labelChoices[0]];
+				const msans = input[labelChoices[1]];
+				console.log({ database, msans });
+				const msansSet = new Set(
+					msans.slice(1).map((msan: any) => msan[0])
+				);
+				console.log({ msansSet });
+				database.forEach((row: any) => {
+					const joined = row.join("");
+					if (joined.length > 0) {
+						const msan = row[1].split(":")[0];
+						if (msansSet.has(msan)) {
+							const nd = row[0];
+							const port = row[1]
+								.split(":")[1]
+								.split("-")
+								.slice(1);
+							final.push([nd, msan, ...port]);
+						}
+					}
+				});
+				setOutput([final]);
+			},
+		},
+	];
 
 	const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files;
 		if (!files) return;
+		setFiles(Array.from(files));
 		readFiles(files)
 			.then((contents) => {
-        console.log(contents);
 				const finalInput = [];
 				for (const content of contents) {
 					const rows = CSVToArray(content);
 					finalInput.push(rows);
 				}
-        console.log( { finalInput });
-        setInput(finalInput);
+				console.log({ finalInput });
+				setInput(finalInput);
+				setLabelChoices([]);
 			})
 			.catch((error) => {
 				console.error(error);
@@ -119,7 +153,6 @@ export default function Home() {
 		if (output) {
 			for (let i = 0; i < output.length; i++) {
 				const csv = output[i];
-        console.log(csv);
 				const csvData = arrayToCSV(csv);
 				const csvBlob = new Blob([csvData], { type: "text/csv" });
 				const csvUrl = URL.createObjectURL(csvBlob);
@@ -132,10 +165,108 @@ export default function Home() {
 	};
 
 	return (
-		<main className="text-white flex flex-col gap-4">
-			<input type="file" accept=".csv" onChange={handleUpload} multiple />
-      <button onClick={() => actions[action]()}>Action</button>
-			<button onClick={handleDownload}>Download</button>
+		<main className="flex justify-center items-center flex-col gap-4 min-h-screen">
+			<div className="w-96 flex flex-col gap-2">
+				<input
+					ref={inputRef}
+					type="file"
+					accept=".csv"
+					onChange={handleUpload}
+					className="hidden"
+					multiple
+				/>
+				<Button onClick={() => inputRef.current?.click()}>
+					Upload
+				</Button>
+				{files?.map((file: any, index: number) => {
+					return (
+						<div key={index}>
+							{file.name} - {file.size} bytes
+						</div>
+					);
+				})}
+				<Select
+					isDisabled={!input || input.length === 0}
+					placeholder="Select an action"
+				>
+					{actions.map((action, index) => {
+						return (
+							<SelectItem
+								key={index}
+								onClick={() => {
+									setAction(index);
+									setLabelChoices([]);
+								}}
+							>
+								{action.name}
+							</SelectItem>
+						);
+					})}
+				</Select>
+
+				{action != null &&
+					actions[action].labels.map(
+						(label: string, index: number) => {
+							return (
+								<Select
+									key={index}
+									placeholder={`Select ${label}`}
+									selectedKeys={
+										labelChoices[index]
+											? [labelChoices[index]]
+											: []
+									}
+									onChange={(e: any) => {
+										setLabelChoices((prev: any) => {
+											const next = [...prev];
+											next[index] = e.target.value;
+											return next;
+										});
+									}}
+								>
+									{files.map((file: any, index: number) => {
+										return (
+											<SelectItem key={index}>
+												{file.name}
+											</SelectItem>
+										);
+									})}
+								</Select>
+							);
+						}
+					)}
+				<div className="flex gap-2">
+					<Button
+						isDisabled={
+							action == null ||
+							labelChoices == null ||
+							labelChoices.length !==
+								actions[action].labels.length ||
+							labelChoices.some((choice: any) => choice == null)
+						}
+						className="flex-1"
+						onClick={() => {
+							try {
+								actions[action].func();
+								setError(null);
+							} catch (error) {
+								console.error(error);
+								setError("Error");
+							}
+						}}
+					>
+						Action
+					</Button>
+					<Button
+						isDisabled={!output || output.length === 0}
+						className="flex-1"
+						onClick={handleDownload}
+					>
+						Download
+					</Button>
+				</div>
+				<div className="text-red-500">{error && error}</div>
+			</div>
 		</main>
 	);
 }
