@@ -423,7 +423,7 @@ export default function Home() {
 					});
 
 					const DEGROUPAGERows = DEGROUPAGE?.filter((row: any) => {
-						return row[3]?.includes(msan) && row[3]?.includes("-" + port);
+						return row[3]?.includes(msan) && row[3]?.endsWith("-" + port);
 					}).forEach((row: any) => {
 						finalrow.push(cleanNumber(row[2]));
 						finalrow.push(cleanNumber(row[2]) == cleanNumber(finalrow[0]) ? "OK" : "NOK");
