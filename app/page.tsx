@@ -49,7 +49,6 @@ function arrayToCSV(arrData: any[][], strDelimiter: string = ";") {
 	let strData = "";
 
 	for (let i = 0; i < arrData.length; i++) {
-		console.log({ arrData });
 		let row = arrData[i].join(strDelimiter);
 		strData += row + "\r\n";
 	}
@@ -144,46 +143,60 @@ export default function Home() {
 					const ogRowJoined = ogRow.slice(1).join("");
 					const current = [...ogRow];
 					if (number.length > 0) {
-						const HWRows = HW?.filter(
-							(row: any) => {
-								return row[2]?.includes(number)
-							}
-						).forEach((row: any) => {
-							const port = row[1].split("/").map((port: string) => 
-								port.replace(/Frame:|Slot:|Port:/g, "")
-							);
+						const HWRows = HW?.filter((row: any) => {
+							return row[2]?.includes(number);
+						}).forEach((row: any) => {
+							const port = row[1]
+								.split("/")
+								.map((port: string) =>
+									port.replace(/Frame:|Slot:|Port:/g, "")
+								);
 							const final = [row[0], ...port];
 							current.push(...final);
-							current.push(final.join("") === ogRowJoined ? "OK" : "NOK");
+							current.push(
+								final.join("") === ogRowJoined ? "OK" : "NOK"
+							);
 						});
-						const NOKIARows = NOKIA?.filter(
-							(row: any) => row[4]?.includes(number)
+						const NOKIARows = NOKIA?.filter((row: any) =>
+							row[4]?.includes(number)
 						).forEach((row: any) => {
 							const msan = row[0].split(":")[0];
-							const port = row[0].split(":")[1].split(".").slice(1).map((port: string) =>
-								port.replace(/R|S|P|LT/g, "")
-							);
+							const port = row[0]
+								.split(":")[1]
+								.split(".")
+								.slice(1)
+								.map((port: string) =>
+									port.replace(/R|S|P|LT/g, "")
+								);
 							const final = [msan, ...port];
 							current.push(...final);
-							current.push(final.join("") === ogRowJoined ? "OK" : "NOK");
+							current.push(
+								final.join("") === ogRowJoined ? "OK" : "NOK"
+							);
 						});
 						const ZTERows = ZTE?.filter(
-							(row: any) => row[19]?.includes(number) && row[24] == "1"
+							(row: any) =>
+								row[19]?.includes(number) && row[24] == "1"
 						).forEach((row: any) => {
 							const msan = row[1];
-							const port = [row[11], row[12], row[13]]
+							const port = [row[11], row[12], row[13]];
 							const final = [msan, ...port];
 							current.push(...final);
-							current.push(final.join("") === ogRowJoined ? "OK" : "NOK");
+							current.push(
+								final.join("") === ogRowJoined ? "OK" : "NOK"
+							);
 						});
 						const ZTE2Rows = ZTE2?.filter(
-							(row: any) => row[19]?.includes(number) && row[24] == "1"
+							(row: any) =>
+								row[19]?.includes(number) && row[24] == "1"
 						).forEach((row: any) => {
 							const msan = row[1];
-							const port = [row[11], row[12], row[13]]
+							const port = [row[11], row[12], row[13]];
 							const final = [msan, ...port];
 							current.push(...final);
-							current.push(final.join("") === ogRowJoined ? "OK" : "NOK");
+							current.push(
+								final.join("") === ogRowJoined ? "OK" : "NOK"
+							);
 						});
 
 						finalOutput.push(current);
@@ -193,7 +206,126 @@ export default function Home() {
 				console.log({ finalOutput });
 				setOutput([finalOutput]);
 			},
-		}
+		},
+		{
+			name: "Contrat",
+			labels: ["CONTRAT", "DEGROUPAGE", "HW", "NOKIA", "ZTE", "ZTE2"],
+			func: () => {
+				const finalOutput = [] as string[][];
+
+				const CONTRAT = input[labelChoices[0]];
+				const DEGROUPAGE = input[labelChoices[1]];
+				const HW = input[labelChoices[2]];
+				const NOKIA = input[labelChoices[3]];
+				const ZTE = input[labelChoices[4]];
+				const ZTE2 = input[labelChoices[5]];
+				const NDMap = new Map<string, any>();
+
+				const cleanNumber = (number: string) => {
+					return number.replace(/^0/, "").replace(/\D.*/, "");
+				};
+
+				const updateEntry = (key: any, entry: any) => {
+					const current = NDMap.get(key);
+					if (current) {
+						NDMap.set(key, [...current, entry]);
+					} else {
+						NDMap.set(key, [entry]);
+					}
+				};
+
+				HW?.slice(5).forEach((row: any) => {
+					try {
+						const number = cleanNumber(row[2]);
+						const msan = row[0];
+						const port = row[1]
+							.split("/")
+							.map((port: string) =>
+								port.replace(/Frame:|Slot:|Port:/g, "")
+							);
+						const final = [row[0], ...port];
+						updateEntry(number, final);
+					} catch (e) {}
+				});
+				NOKIA?.slice(1).forEach((row: any) => {
+					try {
+						const number = cleanNumber(row[4]);
+						const msan = row[0].split(":")[0];
+						const port = row[0]
+							.split(":")[1]
+							.split(".")
+							.slice(1)
+							.map((port: string) =>
+								port.replace(/R|S|P|LT/g, "")
+							);
+						const final = [msan, ...port];
+						updateEntry(number, final);
+					} catch (e) {}
+				});
+				ZTE?.filter((row: any) => row[24] == "1").forEach(
+					(row: any) => {
+						try {
+							const number = cleanNumber(row[19]);
+							const msan = row[1];
+							const port = [row[11], row[12], row[13]];
+							const final = [msan, ...port];
+							updateEntry(number, final);
+						} catch (e) {}
+					}
+				);
+				ZTE2?.filter((row: any) => row[24] == "1").forEach(
+					(row: any) => {
+						try {
+							const number = cleanNumber(row[19]);
+							const msan = row[1];
+							const port = [row[11], row[12], row[13]];
+							const final = [msan, ...port];
+							updateEntry(number, final);
+						} catch (e) {}
+					}
+				);
+
+				const lookup = (
+					number: string,
+					msan: string,
+					port: string[]
+				) => {
+					const current = [number, msan, ...port];
+					const ogRowJoined = current.slice(1).join("");
+					const currentND = NDMap.get(number);
+					if (currentND) {
+						currentND.forEach((nd: any) => {
+							current.push(...nd);
+							current.push(
+								nd.join("") === ogRowJoined ? "OK" : "NOK"
+							);
+						});
+					}
+					finalOutput.push(current);
+				};
+
+				DEGROUPAGE.slice(4).forEach((row: any, index: number) => {
+					if (row[1] == "SIDI OTHMANE" && row[3] && row[3].length > 0) {
+						const number: string = cleanNumber(row[2]);
+						const msan = row[3].split(":")[0];
+						const port = row[3].split(":")[1].split("-").slice(1);
+						msan.length > 0 && lookup(number, msan, port);
+					}
+				});
+
+				CONTRAT.slice(1).forEach((row: any) => {
+					if (row[1] == "SIDI OTHMANE") {
+						const number: string = cleanNumber(row[3]);
+						const msan = row[8];
+						const port = [row[10], row[11], row[12]];
+						msan.length > 0 && lookup(number, msan, port);
+					}
+				});
+
+				console.log({ finalOutput });
+				setOutput([finalOutput.filter((row: any) => row.includes("NOK") || row.length == 5)]);
+			},
+		},
 	];
 
 	const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,8 +383,8 @@ export default function Home() {
 			return next;
 		});
 		setOutput(null);
-	}
-	
+	};
+
 	return (
 		<main className="flex justify-center items-center flex-col gap-4 min-h-screen">
 			<div className="w-96 flex flex-col gap-2">
@@ -299,7 +431,9 @@ export default function Home() {
 											? [labelChoices[index]]
 											: []
 									}
-									onChange={(e) => handleLabelChange(e, index)}
+									onChange={(e) =>
+										handleLabelChange(e, index)
+									}
 								>
 									{files.map((file: any, index: number) => {
 										return (
