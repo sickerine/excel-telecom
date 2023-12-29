@@ -82,6 +82,12 @@ function readFiles(inputFiles: FileList): Promise<string[]> {
 	return Promise.all(filePromises);
 }
 
+
+const cleanNumber = (number: string) => {
+	return number.replace(/^0+/, '').replace(/\D.*$/, '');
+};
+
+
 type Action = {
 	name: string;
 	labels: string[];
@@ -221,10 +227,6 @@ export default function Home() {
 				const ZTE2 = input[labelChoices[5]];
 				const NDMap = new Map<string, any>();
 
-				const cleanNumber = (number: string) => {
-					return number.replace(/^0/, "").replace(/\D.*/, "");
-				};
-
 				const updateEntry = (key: any, entry: any) => {
 					const current = NDMap.get(key);
 					if (current) {
@@ -341,9 +343,7 @@ export default function Home() {
 				const NDSet = new Set<string>();
 				const AgainstNDSet = new Set<string>();
 
-				const cleanNumber = (number: string) => {
-					return number.replace(/^0/, "").replace(/\D.*/, "");
-				};
+
 
 				DEGROUPAGE.slice(4).forEach((row: any, index: number) => {
 					if (row[1] == "SIDI OTHMANE" && row[3] && row[3].length > 0) {
@@ -388,7 +388,6 @@ export default function Home() {
 					}
 				);
 
-				// extract all the numbers in NDSet that are not in AgainstNDSet
 				const NDSetArray = Array.from(NDSet);
 				const AgainstNDSetArray = Array.from(AgainstNDSet);
 				const diff = NDSetArray.filter(
