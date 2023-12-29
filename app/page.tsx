@@ -148,7 +148,7 @@ export default function Home() {
 								return row[2]?.includes(number)
 							}
 						).forEach((row: any) => {
-							const port = row[2].split("/").map((port: string) => 
+							const port = row[1].split("/").map((port: string) => 
 								port.replace(/Frame:|Slot:|Port:/g, "")
 							);
 							current.push(row[0], ...port);
