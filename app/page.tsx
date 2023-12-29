@@ -326,6 +326,81 @@ export default function Home() {
 				setOutput([finalOutput.filter((row: any) => row.includes("NOK") || row.length == 5)]);
 			},
 		},
+		{
+			name: "Reverse Contrat",
+			labels: ["CONTRAT", "DEGROUPAGE", "HW", "NOKIA", "ZTE", "ZTE2"],
+			func: () => {
+				const finalOutput = [] as string[][];
+
+				const CONTRAT = input[labelChoices[0]];
+				const DEGROUPAGE = input[labelChoices[1]];
+				const HW = input[labelChoices[2]];
+				const NOKIA = input[labelChoices[3]];
+				const ZTE = input[labelChoices[4]];
+				const ZTE2 = input[labelChoices[5]];
+				const NDSet = new Set<string>();
+				const AgainstNDSet = new Set<string>();
+
+				const cleanNumber = (number: string) => {
+					return number.replace(/^0/, "").replace(/\D.*/, "");
+				};
+
+				DEGROUPAGE.slice(4).forEach((row: any, index: number) => {
+					if (row[1] == "SIDI OTHMANE" && row[3] && row[3].length > 0) {
+						const number: string = cleanNumber(row[2]);
+						NDSet.add(number);
+					}
+				});
+
+				CONTRAT.slice(1).forEach((row: any) => {
+					if (row[1] == "SIDI OTHMANE") {
+						const number: string = cleanNumber(row[3]);
+						NDSet.add(number);
+					}
+				});
+
+				HW?.slice(5).forEach((row: any) => {
+					try {
+						const number = cleanNumber(row[2]);
+						AgainstNDSet.add(number);
+					} catch (e) {}
+				});
+				NOKIA?.slice(1).forEach((row: any) => {
+					try {
+						const number = cleanNumber(row[4]);
+						AgainstNDSet.add(number);
+					} catch (e) {}
+				});
+				ZTE?.filter((row: any) => row[24] == "1").forEach(
+					(row: any) => {
+						try {
+							const number = cleanNumber(row[19]);
+							AgainstNDSet.add(number);
+						} catch (e) {}
+					}
+				);
+				ZTE2?.filter((row: any) => row[24] == "1").forEach(
+					(row: any) => {
+						try {
+							const number = cleanNumber(row[19]);
+							AgainstNDSet.add(number);
+						} catch (e) {}
+					}
+				);
+
+				// extract all the numbers in NDSet that are not in AgainstNDSet
+				const NDSetArray = Array.from(NDSet);
+				const AgainstNDSetArray = Array.from(AgainstNDSet);
+				const diff = NDSetArray.filter(
+					(number) => !AgainstNDSetArray.includes(number)
+				);
+
+				finalOutput.push(...diff.map((number) => [number]));
+
+				console.log({ finalOutput });
+				setOutput([finalOutput]);
+			},
+		}
 	];
 
 	const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
