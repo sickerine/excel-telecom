@@ -139,9 +139,10 @@ export default function Home() {
 				const OUTPUT = input[labelChoices[4]];
 				const finalOutput = [] as string[][];
 
-				OUTPUT.forEach((row: any) => {
-					const number = row[0];
-					const current = [...row];
+				OUTPUT.forEach((ogRow: any) => {
+					const number = ogRow[0];
+					const ogRowJoined = ogRow.slice(1).join("");
+					const current = [...ogRow];
 					if (number.length > 0) {
 						const HWRows = HW?.filter(
 							(row: any) => {
@@ -151,7 +152,9 @@ export default function Home() {
 							const port = row[1].split("/").map((port: string) => 
 								port.replace(/Frame:|Slot:|Port:/g, "")
 							);
-							current.push(row[0], ...port);
+							const final = [row[0], ...port];
+							current.push(...final);
+							current.push(final.join("") === ogRowJoined ? "OK" : "NOK");
 						});
 						const NOKIARows = NOKIA?.filter(
 							(row: any) => row[4]?.includes(number)
@@ -160,21 +163,27 @@ export default function Home() {
 							const port = row[0].split(":")[1].split(".").slice(1).map((port: string) =>
 								port.replace(/R|S|P|LT/g, "")
 							);
-							current.push(msan, ...port);
+							const final = [msan, ...port];
+							current.push(...final);
+							current.push(final.join("") === ogRowJoined ? "OK" : "NOK");
 						});
 						const ZTERows = ZTE?.filter(
 							(row: any) => row[19]?.includes(number) && row[24] == "1"
 						).forEach((row: any) => {
 							const msan = row[1];
 							const port = [row[11], row[12], row[13]]
-							current.push(msan, ...port);
+							const final = [msan, ...port];
+							current.push(...final);
+							current.push(final.join("") === ogRowJoined ? "OK" : "NOK");
 						});
 						const ZTE2Rows = ZTE2?.filter(
 							(row: any) => row[19]?.includes(number) && row[24] == "1"
 						).forEach((row: any) => {
 							const msan = row[1];
 							const port = [row[11], row[12], row[13]]
-							current.push(msan, ...port);
+							const final = [msan, ...port];
+							current.push(...final);
+							current.push(final.join("") === ogRowJoined ? "OK" : "NOK");
 						});
 
 						finalOutput.push(current);
