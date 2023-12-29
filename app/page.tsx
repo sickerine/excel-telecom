@@ -49,6 +49,7 @@ function arrayToCSV(arrData: any[][], strDelimiter: string = ";") {
 	let strData = "";
 
 	for (let i = 0; i < arrData.length; i++) {
+		console.log({ arrData });
 		let row = arrData[i].join(strDelimiter);
 		strData += row + "\r\n";
 	}
@@ -127,11 +128,73 @@ export default function Home() {
 				setOutput([final]);
 			},
 		},
+		{
+			name: "Extraction",
+			labels: ["HW", "NOKIA", "ZTE", "ZTE2", "OUTPUT"],
+			func: () => {
+				const HW = input[labelChoices[0]];
+				const NOKIA = input[labelChoices[1]];
+				const ZTE = input[labelChoices[2]];
+				const ZTE2 = input[labelChoices[3]];
+				const OUTPUT = input[labelChoices[4]];
+				const finalOutput = [] as string[][];
+
+				OUTPUT.forEach((row: any) => {
+					const number = row[0];
+					const current = [...row];
+					if (number.length > 0) {
+						const HWRows = HW?.filter(
+							(row: any) => {
+								return row[2]?.includes(number)
+							}
+						).forEach((row: any) => {
+							const port = row[2].split("/").map((port: string) => 
+								port.replace(/Frame:|Slot:|Port:/g, "")
+							);
+							current.push(row[0], ...port);
+						});
+						const NOKIARows = NOKIA?.filter(
+							(row: any) => row[4]?.includes(number)
+						).forEach((row: any) => {
+							const msan = row[0].split(":")[0];
+							const port = row[0].split(":")[1].split(".").slice(1).map((port: string) =>
+								port.replace(/R|S|P|LT/g, "")
+							);
+							current.push(msan, ...port);
+						});
+						const ZTERows = ZTE?.filter(
+							(row: any) => row[19]?.includes(number)
+						).forEach((row: any) => {
+							const msan = row[1];
+							const port = [row[11], row[12], row[13]]
+							current.push(msan, ...port);
+						});
+						const ZTE2Rows = ZTE2?.filter(
+							(row: any) => row[19]?.includes(number)
+						).forEach((row: any) => {
+							const msan = row[1];
+							const port = [row[11], row[12], row[13]]
+							current.push(msan, ...port);
+						});
+
+						finalOutput.push(current);
+					}
+				});
+
+				console.log({ finalOutput });
+				setOutput([finalOutput]);
+			},
+		}
 	];
 
 	const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files;
-		if (!files) return;
+		if (!files || files.length === 0) {
+			setAction(null);
+			setLabelChoices([]);
+			setOutput(null);
+			return;
+		}
 		setFiles(Array.from(files));
 		readFiles(files)
 			.then((contents) => {
@@ -164,6 +227,23 @@ export default function Home() {
 		}
 	};
 
+	const handleActionChange = (e: any) => {
+		const action = e.target.value;
+		setAction(action === "" ? null : action);
+		setLabelChoices([]);
+		setOutput(null);
+	};
+
+	const handleLabelChange = (e: any, index: number) => {
+		const label = e.target.value;
+		setLabelChoices((prev: any) => {
+			const next = [...prev];
+			next[index] = label === "" ? null : label;
+			return next;
+		});
+		setOutput(null);
+	}
+	
 	return (
 		<main className="flex justify-center items-center flex-col gap-4 min-h-screen">
 			<div className="w-96 flex flex-col gap-2">
@@ -188,21 +268,12 @@ export default function Home() {
 				<Select
 					isDisabled={!input || input.length === 0}
 					placeholder="Select an action"
-					onChange={(e: any) => {
-						if (e.target.value !== "")
-							setAction(e.target.value);
-						else
-							setAction(null);
-						setLabelChoices([]);
-					}}
+					selectedKeys={action ? [action] : []}
+					onChange={handleActionChange}
 				>
 					{actions.map((action, index) => {
 						return (
-							<SelectItem
-								key={index}
-							>
-								{action.name}
-							</SelectItem>
+							<SelectItem key={index}>{action.name}</SelectItem>
 						);
 					})}
 				</Select>
@@ -219,16 +290,7 @@ export default function Home() {
 											? [labelChoices[index]]
 											: []
 									}
-									onChange={(e: any) => {
-										setLabelChoices((prev: any) => {
-											const next = [...prev];
-											if (e.target.value === "")
-												next[index] = null;
-											else
-												next[index] = e.target.value;
-											return next;
-										});
-									}}
+									onChange={(e) => handleLabelChange(e, index)}
 								>
 									{files.map((file: any, index: number) => {
 										return (
@@ -245,10 +307,7 @@ export default function Home() {
 					<Button
 						isDisabled={
 							action == null ||
-							labelChoices == null ||
-							labelChoices.length !==
-								actions[action].labels.length ||
-							labelChoices.some((choice: any) => choice == null)
+							!labelChoices?.some((choice: any) => choice != null)
 						}
 						className="flex-1"
 						onClick={() => {
