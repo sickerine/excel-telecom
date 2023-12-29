@@ -416,14 +416,14 @@ export default function Home() {
 					const port = row.slice(2).join("-");
 
 					const CONTRATRows = CONTRAT?.filter((row: any) => {
-						return row[8]?.includes(msan) && row.slice(10, 13).join("-") == port;
+						return row[8] == msan && row.slice(10, 13).join("-") == port;
 					}).forEach((row: any) => {
 						finalrow.push(cleanNumber(row[3]));
 						finalrow.push(cleanNumber(row[3]) == cleanNumber(finalrow[0]) ? "OK" : "NOK");
 					});
 
 					const DEGROUPAGERows = DEGROUPAGE?.filter((row: any) => {
-						return row[3]?.includes(msan) && row[3]?.endsWith("-" + port);
+						return row[3]?.split(":")[0] == msan && row[3]?.endsWith("-" + port);
 					}).forEach((row: any) => {
 						finalrow.push(cleanNumber(row[2]));
 						finalrow.push(cleanNumber(row[2]) == cleanNumber(finalrow[0]) ? "OK" : "NOK");
