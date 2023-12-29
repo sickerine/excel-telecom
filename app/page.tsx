@@ -163,14 +163,14 @@ export default function Home() {
 							current.push(msan, ...port);
 						});
 						const ZTERows = ZTE?.filter(
-							(row: any) => row[19]?.includes(number)
+							(row: any) => row[19]?.includes(number) && row[24] == "1"
 						).forEach((row: any) => {
 							const msan = row[1];
 							const port = [row[11], row[12], row[13]]
 							current.push(msan, ...port);
 						});
 						const ZTE2Rows = ZTE2?.filter(
-							(row: any) => row[19]?.includes(number)
+							(row: any) => row[19]?.includes(number) && row[24] == "1"
 						).forEach((row: any) => {
 							const msan = row[1];
 							const port = [row[11], row[12], row[13]]
