@@ -399,6 +399,42 @@ export default function Home() {
 				console.log({ finalOutput });
 				setOutput([finalOutput]);
 			},
+		},
+		{
+			name: "Port",
+			labels: ["CONTRAT", "DEGROUPAGE", "OUTPUT"],
+			func: () => {
+				const CONTRAT = input[labelChoices[0]];
+				const DEGROUPAGE = input[labelChoices[1]];
+				const OUTPUT = input[labelChoices[2]];
+				
+				const finalOutput = [] as string[][];
+
+				OUTPUT.forEach((row: string[]) => {
+					const finalrow = [...row];
+					const msan = row[1];
+					const port = row.slice(2).join("-");
+
+					const CONTRATRows = CONTRAT?.filter((row: any) => {
+						return row[8]?.includes(msan) && row.slice(10, 13).join("-") == port;
+					}).forEach((row: any) => {
+						finalrow.push(cleanNumber(row[3]));
+						finalrow.push(cleanNumber(row[3]) == cleanNumber(finalrow[0]) ? "OK" : "NOK");
+					});
+
+					const DEGROUPAGERows = DEGROUPAGE?.filter((row: any) => {
+						return row[3]?.includes(msan) && row[3]?.includes("-" + port);
+					}).forEach((row: any) => {
+						finalrow.push(cleanNumber(row[2]));
+						finalrow.push(cleanNumber(row[2]) == cleanNumber(finalrow[0]) ? "OK" : "NOK");
+					});
+
+					finalOutput.push(finalrow);
+				});
+
+				console.log({ finalOutput });
+				setOutput([finalOutput]);
+			}
 		}
 	];
 
