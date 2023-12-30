@@ -709,7 +709,7 @@ export default function Home() {
 				<CardHeader>Output</CardHeader>
 				<Divider />
 				<CardBody className="gap-2 p-4">
-					{output?.map((csv: any, index: number) => <DownloadEntry csv={csv} index={index} />)}
+					{output?.map((csv: any, index: number) => <DownloadEntry key={index} csv={csv} index={index} />)}
 				</CardBody>
 				<Divider />
 				<CardFooter>
@@ -718,86 +718,6 @@ export default function Home() {
 					}}>Clear</Button>
 				</CardFooter>
 			</Card>
-			<div className="w-96 flex flex-col gap-2 hidden">
-				<Button onClick={() => inputRef.current?.click()}>
-					Upload
-				</Button>
-				{files?.map((file: any, index: number) => {
-					return (
-						<div key={index}>
-							{file.name} - {file.size} bytes
-						</div>
-					);
-				})}
-				<Select
-					isDisabled={!input || input.length === 0}
-					placeholder="Select an action"
-					selectedKeys={action ? [action] : []}
-					onChange={handleActionChange}
-				>
-					{actions.map((action, index) => {
-						return (
-							<SelectItem key={index}>{action.name}</SelectItem>
-						);
-					})}
-				</Select>
-
-				{action != null &&
-					actions[action].labels.map(
-						(label: string, index: number) => {
-							return (
-								<Select
-									key={index}
-									placeholder={`Select ${label}`}
-									selectedKeys={
-										labelChoices[index]
-											? [labelChoices[index]]
-											: []
-									}
-									onChange={(e) =>
-										handleLabelChange(e, index)
-									}
-								>
-									{files.map((file: any, index: number) => {
-										return (
-											<SelectItem key={index}>
-												{file.name}
-											</SelectItem>
-										);
-									})}
-								</Select>
-							);
-						}
-					)}
-				<div className="flex gap-2">
-					<Button
-						isDisabled={
-							action == null ||
-							!labelChoices?.some((choice: any) => choice != null)
-						}
-						className="flex-1"
-						onClick={() => {
-							try {
-								actions[action].func();
-								setError(null);
-							} catch (error) {
-								console.error(error);
-								setError("Error");
-							}
-						}}
-					>
-						Action
-					</Button>
-					<Button
-						isDisabled={!output || output.length === 0}
-						className="flex-1"
-						onClick={handleDownload}
-					>
-						Download
-					</Button>
-				</div>
-				<div className="text-red-500">{error && error}</div>
-			</div>
 		</main>
 	);
 }
