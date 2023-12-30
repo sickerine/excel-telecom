@@ -539,6 +539,82 @@ export default function Home() {
 				appendOutput([newOUTPUT]);
 			},
 		},
+		{
+			name: "Nombre",
+			desc: "Verification du nombre MSAM NMS.",
+			labels: ["MSANs", "HW", "NOKIA", "ZTE", "ZTE2"],
+			func: () => {
+				const MSANs = input[labelChoices[0]];
+				const HW = input[labelChoices[1]];
+				const NOKIA = input[labelChoices[2]];
+				const ZTE = input[labelChoices[3]];
+				const ZTE2 = input[labelChoices[4]];
+
+				const finalOutput = [] as string[][];
+				const MSANMap = new Map<string, any>();
+
+				const updateEntry = (key: any) => {
+					const current = MSANMap.get(key);
+					if (current != null) {
+						MSANMap.set(key, current + 1);
+					} else {
+						MSANMap.set(key, 1);
+					}
+				}
+
+				HW?.slice(5).forEach((row: any) => {
+					try {
+						const msan = row[0];
+						console.log(msan);
+						updateEntry(msan);
+					} catch (e) {}
+				});
+
+				NOKIA?.slice(1).forEach((row: any) => {
+					try {
+						const msan = row[0].split(":")[0];
+						console.log(msan);
+						updateEntry(msan);
+					} catch (e) {}
+				});
+
+				ZTE?.filter((row: any) => row[24] == "1").forEach(
+					(row: any) => {
+						try {
+							const msan = row[1];
+							console.log(msan);
+							updateEntry(msan);
+						} catch (e) {}
+					}
+				);
+
+				ZTE2?.filter((row: any) => row[24] == "1").forEach(
+					(row: any) => {
+						try {
+							const msan = row[1];
+							console.log(msan);
+							updateEntry(msan);
+						} catch (e) {}
+					}
+				);
+
+				MSANs.slice(1).forEach((row: any) => {
+					try {
+						const msan = row[0];
+						const current = MSANMap.get(msan);
+						if (current != null) {
+							finalOutput.push([msan, current]);
+						}
+					} catch (e) {}
+				});
+
+				console.log({ finalOutput });
+				appendOutput([finalOutput]);
+			
+			},
+
+		}
+		
 	];
 
 	const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
