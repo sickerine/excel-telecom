@@ -443,13 +443,13 @@ export default function Home() {
 				const OUTPUT = input[labelChoices[0]];
 				const MSANs = input[labelChoices[1]];
 
-				OUTPUT.filter((row: any) => {
+				const newOUTPUT = OUTPUT.filter((row: any) => {
 					return MSANs.some((msan: any) => {
 						return msan[0] == row[1];
 					});
 				});
 
-				setOutput([OUTPUT]);
+				setOutput([newOUTPUT]);
 			}
 		}
 	];
