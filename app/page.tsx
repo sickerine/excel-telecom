@@ -1,6 +1,17 @@
 "use client";
 
-import { Button, Select, SelectItem } from "@nextui-org/react";
+import {
+	Button,
+	Card,
+	CardBody,
+	CardFooter,
+	CardHeader,
+	Divider,
+	Input,
+	Select,
+	SelectItem,
+} from "@nextui-org/react";
+import { Download } from "lucide-react";
 import { useRef, useState } from "react";
 
 function CSVToArray(strData: string, strDelimiter: string = ";"): string[][] {
@@ -82,31 +93,74 @@ function readFiles(inputFiles: FileList): Promise<string[]> {
 	return Promise.all(filePromises);
 }
 
-
 const cleanNumber = (number: string) => {
-	return number.replace(/^0+/, '').replace(/\D.*$/, '');
+	return number.replace(/^0+/, "").replace(/\D.*$/, "");
 };
-
 
 type Action = {
 	name: string;
 	labels: string[];
+	desc: string;
 	func: () => void;
 };
 
+function DownloadEntry({ csv, index }: { csv: any; index: number }) {
+	const [name, setName] = useState<string>("");
+
+	return (
+		<div className="flex gap-2">
+			<Input
+				isClearable
+				value={name}
+				onValueChange={setName}
+			 placeholder={"output-" + index} />
+			<Button
+				key={index}
+				isIconOnly
+				className="h-full w-auto aspect-square shrink-0 p-0"
+				onClick={() => {
+					const csvData = arrayToCSV(csv);
+					const csvBlob = new Blob([csvData], {
+						type: "text/csv",
+					});
+					const csvUrl =
+						URL.createObjectURL(csvBlob);
+					const link =
+						document.createElement("a");
+					link.href = csvUrl;
+					link.download = `${name.length > 0 ? name : ("output-" + index)}.csv`;
+					link.click();
+				}}
+			>
+				<Download />
+			</Button>
+		</div>
+	);
+
+}
+
 export default function Home() {
-	const [files, setFiles] = useState<any>(null);
-	const [input, setInput] = useState<any>(null);
-	const [output, setOutput] = useState<any>(null);
+	const [files, setFiles] = useState<any>([]);
+	const [input, setInput] = useState<any>([]);
+	const [output, setOutput] = useState<any>([]);
 	const [action, setAction] = useState<any>(null);
 	const [error, setError] = useState<any>();
 	const [labelChoices, setLabelChoices] = useState<any>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 
+	const appendOutput = (csv: string[][][]) => {
+		setOutput((prev: any) => {
+			const next = [...prev];
+			next.push(...csv);
+			return next;
+		});
+	};
+
 	const actions: Action[] = [
 		{
 			name: "Filter MSANs",
 			labels: ["Database", "MSANs"],
+			desc: "Filtre des clients centre depuis divergence.",
 			func: () => {
 				const final = [["ND", "MSAN", "Port", "Port", "Port"]];
 				const database = input[labelChoices[0]];
@@ -130,13 +184,15 @@ export default function Home() {
 						}
 					}
 				});
-				setOutput([final]);
+				appendOutput([final]);
 			},
 		},
 		{
 			name: "Extraction",
 			labels: ["HW", "NOKIA", "ZTE", "ZTE2", "OUTPUT"],
+			desc: "Extraction des ports depuis NMS (HUAWEI, NOKIA, ZTE).",
 			func: () => {
+				console.log({ labelChoices, files });
 				const HW = input[labelChoices[0]];
 				const NOKIA = input[labelChoices[1]];
 				const ZTE = input[labelChoices[2]];
@@ -210,11 +266,12 @@ export default function Home() {
 				});
 
 				console.log({ finalOutput });
-				setOutput([finalOutput]);
+				appendOutput([finalOutput]);
 			},
 		},
 		{
 			name: "Contrat",
+			desc: "Verification des ND contrat dans NMS (HUAWEI, NOKIA, ZTE).",
 			labels: ["CONTRAT", "DEGROUPAGE", "HW", "NOKIA", "ZTE", "ZTE2"],
 			func: () => {
 				const finalOutput = [] as string[][];
@@ -307,7 +364,11 @@ export default function Home() {
 				};
 
 				DEGROUPAGE.slice(4).forEach((row: any, index: number) => {
-					if (row[1] == "SIDI OTHMANE" && row[3] && row[3].length > 0) {
+					if (
+						row[1] == "SIDI OTHMANE" &&
+						row[3] &&
+						row[3].length > 0
+					) {
 						const number: string = cleanNumber(row[2]);
 						const msan = row[3].split(":")[0];
 						const port = row[3].split(":")[1].split("-").slice(1);
@@ -316,7 +377,10 @@ export default function Home() {
 				});
 
 				CONTRAT.slice(1).forEach((row: any) => {
-					if (row[1] == "SIDI OTHMANE" && row[28]?.trim().length > 0) {
+					if (
+						row[1] == "SIDI OTHMANE" &&
+						row[28]?.trim().length > 0
+					) {
 						const number: string = cleanNumber(row[3]);
 						const msan = row[8];
 						const port = [row[10], row[11], row[12]];
@@ -325,11 +389,16 @@ export default function Home() {
 				});
 
 				console.log({ finalOutput });
-				setOutput([finalOutput.filter((row: any) => row.includes("NOK") || row.length == 5)]);
+				appendOutput([
+					finalOutput.filter(
+						(row: any) => row.includes("NOK") || row.length == 5
+					),
+				]);
 			},
 		},
 		{
 			name: "Reverse Contrat",
+			desc: "Verification des ND depuis NMS dans le contrat.",
 			labels: ["CONTRAT", "DEGROUPAGE", "HW", "NOKIA", "ZTE", "ZTE2"],
 			func: () => {
 				const finalOutput = [] as string[][];
@@ -343,10 +412,12 @@ export default function Home() {
 				const NDSet = new Set<string>();
 				const AgainstNDSet = new Set<string>();
 
-
-
 				DEGROUPAGE.slice(4).forEach((row: any, index: number) => {
-					if (row[1] == "SIDI OTHMANE" && row[3] && row[3].length > 0) {
+					if (
+						row[1] == "SIDI OTHMANE" &&
+						row[3] &&
+						row[3].length > 0
+					) {
 						const number: string = cleanNumber(row[2]);
 						NDSet.add(number);
 					}
@@ -397,17 +468,18 @@ export default function Home() {
 				finalOutput.push(...diff.map((number) => [number]));
 
 				console.log({ finalOutput });
-				setOutput([finalOutput]);
+				appendOutput([finalOutput]);
 			},
 		},
 		{
 			name: "Port",
+			desc: "Verification des ports VDSL depuis contrat.",
 			labels: ["CONTRAT", "DEGROUPAGE", "OUTPUT"],
 			func: () => {
 				const CONTRAT = input[labelChoices[0]];
 				const DEGROUPAGE = input[labelChoices[1]];
 				const OUTPUT = input[labelChoices[2]];
-				
+
 				const finalOutput = [] as string[][];
 
 				OUTPUT.forEach((row: string[]) => {
@@ -416,28 +488,43 @@ export default function Home() {
 					const port = row.slice(2).join("-");
 
 					const CONTRATRows = CONTRAT?.filter((row: any) => {
-						return row[8] == msan && row.slice(10, 13).join("-") == port;
+						return (
+							row[8] == msan &&
+							row.slice(10, 13).join("-") == port
+						);
 					}).forEach((row: any) => {
 						finalrow.push(cleanNumber(row[3]));
-						finalrow.push(cleanNumber(row[3]) == cleanNumber(finalrow[0]) ? "OK" : "NOK");
+						finalrow.push(
+							cleanNumber(row[3]) == cleanNumber(finalrow[0])
+								? "OK"
+								: "NOK"
+						);
 					});
 
 					const DEGROUPAGERows = DEGROUPAGE?.filter((row: any) => {
-						return row[3]?.split(":")[0] == msan && row[3]?.endsWith("-" + port);
+						return (
+							row[3]?.split(":")[0] == msan &&
+							row[3]?.endsWith("-" + port)
+						);
 					}).forEach((row: any) => {
 						finalrow.push(cleanNumber(row[2]));
-						finalrow.push(cleanNumber(row[2]) == cleanNumber(finalrow[0]) ? "OK" : "NOK");
+						finalrow.push(
+							cleanNumber(row[2]) == cleanNumber(finalrow[0])
+								? "OK"
+								: "NOK"
+						);
 					});
 
 					finalOutput.push(finalrow);
 				});
 
 				console.log({ finalOutput });
-				setOutput([finalOutput]);
-			}
+				appendOutput([finalOutput]);
+			},
 		},
 		{
 			name: "Filter MSAN Central",
+			desc: "Supression des MSANs non rattachés au centre.",
 			labels: ["OUTPUT", "MSANs"],
 			func: () => {
 				const OUTPUT = input[labelChoices[0]];
@@ -449,34 +536,37 @@ export default function Home() {
 					});
 				});
 
-				setOutput([newOUTPUT]);
-			}
-		}
+				appendOutput([newOUTPUT]);
+			},
+		},
 	];
 
 	const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const files = e.target.files;
-		if (!files || files.length === 0) {
-			setAction(null);
-			setLabelChoices([]);
-			setOutput(null);
-			return;
+		const addedFiles = e.target.files;
+
+		if (addedFiles) {
+			const newFiles = [...files] as any;
+
+			for (let i = 0; i < addedFiles.length; i++) {
+				const file = addedFiles[i];
+				newFiles.push(file);
+			}
+
+			setFiles(newFiles);
+			readFiles(addedFiles)
+				.then((contents) => {
+					const finalInput = [...input] as any;
+					for (let i = 0; i < contents.length; i++) {
+						const content = contents[i];
+						const csv = CSVToArray(content);
+						finalInput.push(csv);
+					}
+					setInput(finalInput);
+				})
+				.catch((error) => {
+					console.error(error);
+				});
 		}
-		setFiles(Array.from(files));
-		readFiles(files)
-			.then((contents) => {
-				const finalInput = [];
-				for (const content of contents) {
-					const rows = CSVToArray(content);
-					finalInput.push(rows);
-				}
-				console.log({ finalInput });
-				setInput(finalInput);
-				setLabelChoices([]);
-			})
-			.catch((error) => {
-				console.error(error);
-			});
 	};
 
 	const handleDownload = () => {
@@ -498,7 +588,6 @@ export default function Home() {
 		const action = e.target.value;
 		setAction(action === "" ? null : action);
 		setLabelChoices([]);
-		setOutput(null);
 	};
 
 	const handleLabelChange = (e: any, index: number) => {
@@ -508,20 +597,128 @@ export default function Home() {
 			next[index] = label === "" ? null : label;
 			return next;
 		});
-		setOutput(null);
 	};
 
 	return (
-		<main className="flex justify-center items-center flex-col gap-4 min-h-screen">
-			<div className="w-96 flex flex-col gap-2">
-				<input
-					ref={inputRef}
-					type="file"
-					accept=".csv"
-					onChange={handleUpload}
-					className="hidden"
-					multiple
-				/>
+		<main className="flex  gap-4 min-h-screen p-4">
+			<input
+				ref={inputRef}
+				type="file"
+				accept=".csv"
+				onChange={handleUpload}
+				className="hidden"
+				multiple
+			/>
+			<Card className="flex-1">
+				<CardHeader>Input</CardHeader>
+				<Divider />
+				<CardBody className="gap-2 p-4">
+					{files?.map((file: any, index: number) => {
+						return (
+							<div
+								key={index}
+								className="flex justify-between items-center"
+							>
+								{file.name} - {file.size} bytes
+							</div>
+						);
+					})}
+				</CardBody>
+				<Divider />
+				<CardFooter>
+					<Button onClick={() => inputRef.current?.click()}>
+						Upload
+					</Button>
+				</CardFooter>
+			</Card>
+			<Card className="flex-1">
+				<CardHeader>Action</CardHeader>
+				<Divider />
+				<CardBody className="gap-2 p-4">
+					<Select
+						placeholder="Select an action"
+						selectedKeys={action ? [action] : []}
+						onChange={handleActionChange}
+					>
+						{actions.map((action, index) => {
+							return (
+								<SelectItem key={index}>
+									{action.name}
+								</SelectItem>
+							);
+						})}
+					</Select>
+					<Card>
+						<CardBody className="flex flex-col gap-4">
+							{action != null && (
+								<>
+									<Divider />
+									{actions[action].desc} <Divider />
+								</>
+							)}
+						</CardBody>
+					</Card>
+					{action != null &&
+						actions[action].labels.map(
+							(label: string, index: number) => {
+								return (
+									<Select
+										key={index}
+										placeholder={`Select ${label}`}
+										selectedKeys={
+											labelChoices[index]
+												? [labelChoices[index]]
+												: []
+										}
+										onChange={(e) =>
+											handleLabelChange(e, index)
+										}
+									>
+										{files.map(
+											(file: any, index: number) => {
+												return (
+													<SelectItem key={index}>
+														{file.name}
+													</SelectItem>
+												);
+											}
+										)}
+									</Select>
+								);
+							}
+						)}
+				</CardBody>
+				<Divider />
+				<CardFooter>
+					<Button
+						onClick={() => {
+							try {
+								actions[action].func();
+								setError(null);
+							} catch (error) {
+								console.error(error);
+								setError("Error");
+							}
+						}}
+					>
+						Action
+					</Button>
+				</CardFooter>
+			</Card>
+			<Card className="flex-1">
+				<CardHeader>Output</CardHeader>
+				<Divider />
+				<CardBody className="gap-2 p-4">
+					{output?.map((csv: any, index: number) => <DownloadEntry csv={csv} index={index} />)}
+				</CardBody>
+				<Divider />
+				<CardFooter>
+					<Button isDisabled={output.length == 0} color="danger" onClick={() => {
+						setOutput([]);
+					}}>Clear</Button>
+				</CardFooter>
+			</Card>
+			<div className="w-96 flex flex-col gap-2 hidden">
 				<Button onClick={() => inputRef.current?.click()}>
 					Upload
 				</Button>
