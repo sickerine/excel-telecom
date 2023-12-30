@@ -316,7 +316,7 @@ export default function Home() {
 				});
 
 				CONTRAT.slice(1).forEach((row: any) => {
-					if (row[1] == "SIDI OTHMANE") {
+					if (row[1] == "SIDI OTHMANE" && row[28]?.trim().length > 0) {
 						const number: string = cleanNumber(row[3]);
 						const msan = row[8];
 						const port = [row[10], row[11], row[12]];
@@ -434,6 +434,22 @@ export default function Home() {
 
 				console.log({ finalOutput });
 				setOutput([finalOutput]);
+			}
+		},
+		{
+			name: "Filter MSAN Central",
+			labels: ["OUTPUT", "MSANs"],
+			func: () => {
+				const OUTPUT = input[labelChoices[0]];
+				const MSANs = input[labelChoices[1]];
+
+				OUTPUT.filter((row: any) => {
+					return MSANs.some((msan: any) => {
+						return msan[0] == row[1];
+					});
+				});
+
+				setOutput([OUTPUT]);
 			}
 		}
 	];
