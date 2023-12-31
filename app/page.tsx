@@ -642,7 +642,7 @@ export default function Home() {
 					} catch (e) {}
 				});
 
-				const finalOutputDegroupage = [DEGROUPAGE[3]] as any;
+				const finalOutputDegroupage = [DEGROUPAGE[1]] as any;
 
 				DEGROUPAGE.slice(4).forEach((row: any) => {
 					try {
