@@ -612,9 +612,51 @@ export default function Home() {
 				appendOutput([finalOutput]);
 			
 			},
+		},
+		{
+			name: "Données resilies",
+			desc: "Verification des ND resilies.",
+			labels: ["CONTRAT", "DEGROUPAGE", "ND"],
+			func: () => {
+				const CONTRAT = input[labelChoices[0]];
+				const DEGROUPAGE = input[labelChoices[1]];
+				const ND = input[labelChoices[2]];
 
+				const NDSet = new Set<string>();
+
+				ND.forEach((row: any) => {
+					try {
+						const number = cleanNumber(row[0]);
+						NDSet.add(number);
+					} catch (e) {}
+				});
+
+				const finalOutputContrat = [CONTRAT[0]] as any;
+
+				CONTRAT.slice(1).forEach((row: any) => {
+					try {
+						const number = cleanNumber(row[3]);
+						if (NDSet.has(number)) {
+							finalOutputContrat.push(row);
+						}
+					} catch (e) {}
+				});
+
+				const finalOutputDegroupage = [DEGROUPAGE[0]] as any;
+
+				DEGROUPAGE.slice(4).forEach((row: any) => {
+					try {
+						const number = cleanNumber(row[2]);
+						if (NDSet.has(number)) {
+							finalOutputDegroupage.push(row);
+						}
+					} catch (e) {}
+				});
+
+				console.log({ finalOutputContrat, finalOutputDegroupage });
+				appendOutput([finalOutputContrat, finalOutputDegroupage]);
+			}
 		}
-		
 	];
 
 	const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
