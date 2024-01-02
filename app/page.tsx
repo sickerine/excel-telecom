@@ -363,7 +363,7 @@ export default function Home() {
 					finalOutput.push(current);
 				};
 
-				DEGROUPAGE.slice(4).forEach((row: any, index: number) => {
+				DEGROUPAGE?.slice(4).forEach((row: any, index: number) => {
 					if (
 						row[1] == "SIDI OTHMANE" &&
 						row[3] &&
@@ -376,7 +376,7 @@ export default function Home() {
 					}
 				});
 
-				CONTRAT.slice(1).forEach((row: any) => {
+				CONTRAT?.slice(1).forEach((row: any) => {
 					if (
 						row[1] == "SIDI OTHMANE" &&
 						row[28]?.trim().length > 0
@@ -602,9 +602,7 @@ export default function Home() {
 					try {
 						const msan = row[0];
 						const current = MSANMap.get(msan);
-						if (current != null) {
-							finalOutput.push([msan, current]);
-						}
+						finalOutput.push([msan, current || 0]);
 					} catch (e) {}
 				});
 
