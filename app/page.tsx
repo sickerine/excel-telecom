@@ -503,8 +503,8 @@ export default function Home() {
 
 					const DEGROUPAGERows = DEGROUPAGE?.filter((row: any) => {
 						return (
-							row[3]?.split(":")[0] == msan &&
-							row[3]?.endsWith("-" + port)
+							row[5]?.split(":")[0] == msan &&
+							row[5]?.endsWith("-" + port)
 						);
 					}).forEach((row: any) => {
 						finalrow.push(cleanNumber(row[2]));
