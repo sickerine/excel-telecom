@@ -633,9 +633,15 @@ export default function Home() {
 
 				CONTRAT.slice(1).forEach((row: any) => {
 					try {
-						const number = cleanNumber(row[3]);
+						const NDLocation = 3
+						const number = cleanNumber(row[NDLocation]);
 						if (NDSet.has(number)) {
 							finalOutputContrat.push(row);
+						}
+						else
+						{
+							const newRow = Array.from({ length: row.length }, (_, i) => i == NDLocation ? number : "");
+							finalOutputContrat.push(newRow);
 						}
 					} catch (e) {}
 				});
@@ -644,12 +650,20 @@ export default function Home() {
 
 				DEGROUPAGE.slice(4).forEach((row: any) => {
 					try {
+						const NDLocation = 2
 						const number = cleanNumber(row[2]);
 						if (NDSet.has(number)) {
 							finalOutputDegroupage.push(row);
 						}
+						else
+						{
+							const newRow = Array.from({ length: row.length }, (_, i) => i == NDLocation ? number : "");
+							finalOutputDegroupage.push(newRow);
+						}
 					} catch (e) {}
 				});
+
+
 
 				console.log({ finalOutputContrat, finalOutputDegroupage });
 				appendOutput([finalOutputContrat, finalOutputDegroupage]);
