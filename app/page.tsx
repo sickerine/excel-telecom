@@ -621,11 +621,13 @@ export default function Home() {
 				const ND = input[labelChoices[2]];
 
 				const NDSet = new Set<string>();
+				const NDSetFinal = new Set<string>();
 
 				ND.forEach((row: any) => {
 					try {
 						const number = cleanNumber(row[0]);
 						NDSet.add(number);
+						NDSetFinal.add(number);
 					} catch (e) {}
 				});
 
@@ -637,11 +639,7 @@ export default function Home() {
 						const number = cleanNumber(row[NDLocation]);
 						if (NDSet.has(number)) {
 							finalOutputContrat.push(row);
-						}
-						else
-						{
-							const newRow = Array.from({ length: row.length }, (_, i) => i == NDLocation ? number : "");
-							finalOutputContrat.push(newRow);
+							NDSetFinal.delete(number);
 						}
 					} catch (e) {}
 				});
@@ -654,19 +652,19 @@ export default function Home() {
 						const number = cleanNumber(row[2]);
 						if (NDSet.has(number)) {
 							finalOutputDegroupage.push(row);
-						}
-						else
-						{
-							const newRow = Array.from({ length: row.length }, (_, i) => i == NDLocation ? number : "");
-							finalOutputDegroupage.push(newRow);
+							NDSetFinal.delete(number);
 						}
 					} catch (e) {}
 				});
 
+				const finalOutputND = [["ND"]] as any;
+				
+				NDSetFinal.forEach((number) => {
+					finalOutputND.push([number]);
+				});
 
-
-				console.log({ finalOutputContrat, finalOutputDegroupage });
-				appendOutput([finalOutputContrat, finalOutputDegroupage]);
+				console.log({ finalOutputContrat, finalOutputDegroupage, finalOutputND });
+				appendOutput([finalOutputContrat, finalOutputDegroupage, finalOutputND]);
 			}
 		}
 	];
